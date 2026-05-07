@@ -10,13 +10,13 @@ class TimeEntryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
-            'company_id'  => $this->company_id,
-            'employee_id' => $this->employee_id,
-            'project_id'  => $this->project_id,
-            'task_id'     => $this->task_id,
-            'date'        => $this->date->toDateString(),
-            'hours'       => (float) $this->hours,
+            'id'       => $this->id,
+            'company'  => new CompanyResource($this->whenLoaded('company')),
+            'employee' => new EmployeeResource($this->whenLoaded('employee')),
+            'project'  => new ProjectResource($this->whenLoaded('project')),
+            'task'     => new TaskResource($this->whenLoaded('task')),
+            'date'     => $this->date->toDateString(),
+            'hours'    => (float) $this->hours,
         ];
     }
 }

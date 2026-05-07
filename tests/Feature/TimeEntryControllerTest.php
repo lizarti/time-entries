@@ -40,7 +40,41 @@ it('returns all time entries', function () {
     $this->getJson('/api/time-entries')
         ->assertOk()
         ->assertJsonCount(3, 'data')
-        ->assertJsonStructure(['data' => [['id', 'company_id', 'employee_id', 'project_id', 'task_id', 'date', 'hours']]]);
+        ->assertJsonStructure(['data' => [[
+            'id',
+            'company'  => ['id', 'name'],
+            'employee' => ['id', 'name'],
+            'project'  => ['id', 'company_id', 'name'],
+            'task'     => ['id', 'company_id', 'name'],
+            'date',
+            'hours',
+        ]]]);
+});
+
+it('filters time entries by company_id', function () {
+    $ctx   = setup();
+    $other = Company::factory()->create();
+
+    TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+    ]);
+    TimeEntry::factory()->create(); // belongs to a different company
+
+    $this->getJson("/api/time-entries?company_id={$ctx['company']->id}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.company.id', $ctx['company']->id);
+});
+
+it('returns all time entries when no company_id filter is given', function () {
+    TimeEntry::factory()->count(3)->create();
+
+    $this->getJson('/api/time-entries')
+        ->assertOk()
+        ->assertJsonCount(3, 'data');
 });
 
 // ─── Bulk Insert: happy path ───────────────────────────────────────────────────
@@ -56,7 +90,15 @@ it('creates multiple time entries and returns 201', function () {
     ])
         ->assertCreated()
         ->assertJsonCount(2, 'data')
-        ->assertJsonStructure(['data' => [['id', 'company_id', 'employee_id', 'project_id', 'task_id', 'date', 'hours']]]);
+        ->assertJsonStructure(['data' => [[
+            'id',
+            'company'  => ['id', 'name'],
+            'employee' => ['id', 'name'],
+            'project'  => ['id', 'company_id', 'name'],
+            'task'     => ['id', 'company_id', 'name'],
+            'date',
+            'hours',
+        ]]]);
 
     expect(TimeEntry::count())->toBe(2);
 });

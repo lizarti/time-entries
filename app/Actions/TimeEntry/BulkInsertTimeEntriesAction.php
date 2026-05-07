@@ -14,11 +14,15 @@ class BulkInsertTimeEntriesAction
         $this->checkIntraBatchConflicts($entries);
 
         return DB::transaction(function () use ($entries): Collection {
-            return collect($entries)->map(function (array $entry): TimeEntry {
+            $ids = collect($entries)->map(function (array $entry): int {
                 $this->checkDatabaseConflict($entry);
 
-                return TimeEntry::create($entry);
+                return TimeEntry::create($entry)->id;
             });
+
+            return TimeEntry::with(['company', 'employee', 'project', 'task'])
+                ->whereIn('id', $ids)
+                ->get();
         });
     }
 

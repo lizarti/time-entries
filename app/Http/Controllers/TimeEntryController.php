@@ -7,14 +7,22 @@ use App\Http\Requests\BulkInsertTimeEntriesRequest;
 use App\Http\Resources\TimeEntryResource;
 use App\Models\TimeEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
 class TimeEntryController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        return TimeEntryResource::collection(TimeEntry::all());
+        $entries = TimeEntry::with(['company', 'employee', 'project', 'task'])
+            ->when(
+                $request->filled('company_id'),
+                fn ($q) => $q->where('company_id', $request->input('company_id'))
+            )
+            ->get();
+
+        return TimeEntryResource::collection($entries);
     }
 
     public function bulkStore(
