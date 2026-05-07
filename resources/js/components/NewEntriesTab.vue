@@ -37,7 +37,7 @@
                     :model-value="row"
                     :locked-company-id="selectedCompany?.id ?? null"
                     :errors="rowErrors[index] ?? {}"
-                    @update:model-value="(updated) => rows[index] = updated"
+                    @update:model-value="(updated) => onUpdateRow(index, updated)"
                     @remove="removeRow(index)"
                 />
             </TableBody>
@@ -148,5 +148,9 @@ function isValidationError(e: unknown): e is { status: number; body: { errors: R
         (e as { status: number }).status === 422 &&
         'body' in e
     );
+}
+
+function onUpdateRow(index: number, updated: BulkInsertEntry): void {
+    rows.value[index] = updated;
 }
 </script>

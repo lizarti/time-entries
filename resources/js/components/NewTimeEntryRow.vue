@@ -11,7 +11,7 @@
             <Select
                 v-else
                 :model-value="row.company_id ? String(row.company_id) : ''"
-                @update:model-value="onCompanyChange"
+                @update:model-value="(companyId) => onCompanyChange(String(companyId))"
             >
                 <SelectTrigger class="w-40">
                     <SelectValue placeholder="Company" />
@@ -32,10 +32,10 @@
         <TableCell>
             <Input
                 type="date"
-                :value="row.date"
+                :model-value="row.date"
                 class="w-38"
                 :class="{ 'border-destructive': fieldError('date') }"
-                @input="emit('update:modelValue', { ...row, date: ($event.target as HTMLInputElement).value })"
+                @input="onDateChange($event)"
             />
         </TableCell>
 
@@ -179,6 +179,11 @@ function onCompanyChange(value: string): void {
         project_id: 0,
         task_id: 0,
     });
+}
+
+function onDateChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    emit('update:modelValue', { ...row.value, date: value });
 }
 
 // ─── Locked company display name ──────────────────────────────────────────────
