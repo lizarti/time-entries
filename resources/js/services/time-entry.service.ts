@@ -9,7 +9,7 @@ export const timeEntryService = {
     },
 
     async bulkInsert(payload: BulkInsertPayload): Promise<TimeEntry[]> {
-        const res = await http.post<ApiCollection<TimeEntry>>('/time-entries', payload);
+        const res = await http.post<ApiCollection<TimeEntry>>('/time-entries/bulk', payload);
         return res.data;
     },
 };
