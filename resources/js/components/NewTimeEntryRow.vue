@@ -8,101 +8,61 @@
             >
                 {{ lockedCompanyName }}
             </span>
-            <Select
+            <AppCombobox
                 v-else
                 :model-value="row.company_id ? String(row.company_id) : ''"
-                @update:model-value="(companyId) => onCompanyChange(String(companyId))"
-            >
-                <SelectTrigger class="w-40">
-                    <SelectValue placeholder="Company" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem
-                        v-for="c in allCompanies"
-                        :key="c.id"
-                        :value="String(c.id)"
-                    >
-                        {{ c.name }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+                :options="companyOptions"
+                placeholder="Company"
+                search-placeholder="Search companies..."
+                @update:model-value="onCompanyChange"
+            />
         </TableCell>
 
         <!-- Date -->
         <TableCell>
             <Input
                 type="date"
-                :model-value="row.date"
+                :value="row.date"
                 class="w-38"
                 :class="{ 'border-destructive': fieldError('date') }"
-                @input="onDateChange($event)"
+                @input="emit('update:modelValue', { ...row, date: ($event.target as HTMLInputElement).value })"
             />
         </TableCell>
 
         <!-- Employee -->
         <TableCell>
-            <Select
+            <AppCombobox
                 :model-value="row.employee_id ? String(row.employee_id) : ''"
+                :options="availableEmployeeOptions"
                 :disabled="!effectiveCompanyId"
+                placeholder="Employee"
+                search-placeholder="Search employees..."
                 @update:model-value="(v) => emit('update:modelValue', { ...row, employee_id: Number(v) })"
-            >
-                <SelectTrigger class="w-40">
-                    <SelectValue placeholder="Employee" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem
-                        v-for="e in availableEmployeeOptions"
-                        :key="e.id"
-                        :value="String(e.id)"
-                    >
-                        {{ e.name }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+            />
         </TableCell>
 
         <!-- Project -->
         <TableCell>
-            <Select
+            <AppCombobox
                 :model-value="row.project_id ? String(row.project_id) : ''"
+                :options="availableProjectOptions"
                 :disabled="!effectiveCompanyId"
+                placeholder="Project"
+                search-placeholder="Search projects..."
                 @update:model-value="(v) => emit('update:modelValue', { ...row, project_id: Number(v) })"
-            >
-                <SelectTrigger class="w-40">
-                    <SelectValue placeholder="Project" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem
-                        v-for="p in availableProjectOptions"
-                        :key="p.id"
-                        :value="String(p.id)"
-                    >
-                        {{ p.name }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+            />
         </TableCell>
 
         <!-- Task -->
         <TableCell>
-            <Select
+            <AppCombobox
                 :model-value="row.task_id ? String(row.task_id) : ''"
+                :options="availableTaskOptions"
                 :disabled="!effectiveCompanyId"
+                placeholder="Task"
+                search-placeholder="Search tasks..."
                 @update:model-value="(v) => emit('update:modelValue', { ...row, task_id: Number(v) })"
-            >
-                <SelectTrigger class="w-40">
-                    <SelectValue placeholder="Task" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem
-                        v-for="t in availableTaskOptions"
-                        :key="t.id"
-                        :value="String(t.id)"
-                    >
-                        {{ t.name }}
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+            />
         </TableCell>
 
         <!-- Hours -->
@@ -129,17 +89,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { XIcon } from 'lucide-vue-next';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import AppCombobox from '@/components/AppCombobox.vue';
 import { useCompanies } from '@/composables/useCompanies';
 import { useEmployees } from '@/composables/useEmployees';
 import { useProjects } from '@/composables/useProjects';
 import { useTasks } from '@/composables/useTasks';
-import type { BulkInsertEntry, Company } from '@/types/api';
+import type { BulkInsertEntry, Company, Employee, Project, Task } from '@/types/api';
 
 const props = defineProps<{
     modelValue: BulkInsertEntry;
@@ -155,44 +115,48 @@ const emit = defineEmits<{
 const row = computed(() => props.modelValue);
 
 // ─── Effective company ID ──────────────────────────────────────────────────────
-// When locked (global company selected), always use that.
-// Otherwise, use the row's own company_id selection.
 const effectiveCompanyId = computed<number | null>(() =>
     props.lockedCompanyId ?? (row.value.company_id || null),
 );
 
-// ─── Available options (reactive to effectiveCompanyId) ───────────────────────
-const { availableEmployeeOptions, availableProjectOptions, availableTaskOptions } =
-    (() => {
-        const { employees: availableEmployeeOptions } = useEmployees(effectiveCompanyId);
-        const { projects: availableProjectOptions } = useProjects(effectiveCompanyId);
-        const { tasks: availableTaskOptions } = useTasks(effectiveCompanyId);
-        return { availableEmployeeOptions, availableProjectOptions, availableTaskOptions };
-    })();
+// ─── Available options ────────────────────────────────────────────────────────
+const { employees } = useEmployees(effectiveCompanyId);
+const { projects } = useProjects(effectiveCompanyId);
+const { tasks }    = useTasks(effectiveCompanyId);
+
+const availableEmployeeOptions = computed(() =>
+    employees.value.map((e: Employee) => ({ value: String(e.id), label: e.name })),
+);
+const availableProjectOptions = computed(() =>
+    projects.value.map((p: Project) => ({ value: String(p.id), label: p.name })),
+);
+const availableTaskOptions = computed(() =>
+    tasks.value.map((t: Task) => ({ value: String(t.id), label: t.name })),
+);
+
+// ─── Company options (for unlocked row) ───────────────────────────────────────
+const { companies: allCompanies } = useCompanies();
+
+const companyOptions = computed(() =>
+    allCompanies.value.map((c: Company) => ({ value: String(c.id), label: c.name })),
+);
 
 // ─── Company change resets dependents ─────────────────────────────────────────
 function onCompanyChange(value: string): void {
     emit('update:modelValue', {
         ...row.value,
-        company_id: Number(value),
+        company_id:  Number(value),
         employee_id: 0,
-        project_id: 0,
-        task_id: 0,
+        project_id:  0,
+        task_id:     0,
     });
 }
 
-function onDateChange(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    emit('update:modelValue', { ...row.value, date: value });
-}
-
 // ─── Locked company display name ──────────────────────────────────────────────
-const { companies: allCompanies } = useCompanies();
-
 const lockedCompanyName = computed<string>(() => {
     if (props.lockedCompanyId === null) return '';
-    const match = allCompanies.value.find((c: Company) => c.id === props.lockedCompanyId);
-    return match?.name ?? String(props.lockedCompanyId);
+    return allCompanies.value.find((c: Company) => c.id === props.lockedCompanyId)?.name
+        ?? String(props.lockedCompanyId);
 });
 
 // ─── Error helper ─────────────────────────────────────────────────────────────

@@ -1,36 +1,28 @@
 <template>
-    <Select :model-value="selectValue" @update:model-value="onSelect">
-        <SelectTrigger class="w-56">
-            <SelectValue placeholder="All companies" />
-        </SelectTrigger>
-        <SelectContent>
-            <SelectItem value="all">All companies</SelectItem>
-            <SelectItem
-                v-for="company in companies"
-                :key="company.id"
-                :value="String(company.id)"
-            >
-                {{ company.name }}
-            </SelectItem>
-        </SelectContent>
-    </Select>
+    <AppCombobox
+        :model-value="selectValue"
+        :options="options"
+        placeholder="All companies"
+        search-placeholder="Search companies..."
+        class="w-56"
+        @update:model-value="onSelect"
+    />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import AppCombobox from '@/components/AppCombobox.vue';
 import { useCompanies } from '@/composables/useCompanies';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import type { Company } from '@/types/api';
 
 const { companies } = useCompanies();
 const { selectedCompany, setSelectedCompany } = useSelectedCompany();
+
+const options = computed(() => [
+    { value: 'all', label: 'All companies' },
+    ...companies.value.map((c: Company) => ({ value: String(c.id), label: c.name })),
+]);
 
 const selectValue = computed(() =>
     selectedCompany.value ? String(selectedCompany.value.id) : 'all',
