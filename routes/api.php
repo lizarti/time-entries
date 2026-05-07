@@ -1,0 +1,16 @@
+<?php
+
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TimeEntryController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/companies', [CompanyController::class, 'index']);
+Route::get('/companies/{company}/employees', [EmployeeController::class, 'index']);
+Route::get('/companies/{company}/projects', [ProjectController::class, 'index']);
+Route::get('/companies/{company}/tasks', [TaskController::class, 'index']);
+
+Route::get('/time-entries', [TimeEntryController::class, 'index']);
+Route::post('/time-entries/bulk', [TimeEntryController::class, 'bulkStore']);
