@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Actions\TimeEntry\BulkInsertTimeEntriesAction;
+use App\Actions\TimeEntry\UpdateTimeEntryAction;
 use App\Http\Requests\BulkInsertTimeEntriesRequest;
+use App\Http\Requests\UpdateTimeEntryRequest;
 use App\Http\Resources\TimeEntryResource;
 use App\Models\TimeEntry;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +25,16 @@ class TimeEntryController extends Controller
             ->get();
 
         return TimeEntryResource::collection($entries);
+    }
+
+    public function update(
+        UpdateTimeEntryRequest $request,
+        TimeEntry $timeEntry,
+        UpdateTimeEntryAction $action,
+    ): TimeEntryResource {
+        $entry = $action->execute($timeEntry, $request->validated());
+
+        return new TimeEntryResource($entry);
     }
 
     public function bulkStore(

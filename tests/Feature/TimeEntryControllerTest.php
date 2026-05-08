@@ -256,3 +256,181 @@ it('rolls back all inserts when one entry conflicts with the database', function
     // Only the pre-existing entry should be in the database
     expect(TimeEntry::count())->toBe(1);
 });
+
+// ─── Update ───────────────────────────────────────────────────────────────────
+
+it('updates a time entry and returns 200 with the updated resource', function () {
+    $ctx   = setup();
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 8.0,
+    ]);
+
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-09',
+        'hours'       => 4.5,
+    ])
+        ->assertOk()
+        ->assertJsonStructure(['data' => [
+            'id', 'company' => ['id', 'name'],
+            'employee' => ['id', 'name'],
+            'project'  => ['id', 'company_id', 'name'],
+            'task'     => ['id', 'company_id', 'name'],
+            'date', 'hours',
+        ]])
+        ->assertJsonPath('data.date', '2026-05-09')
+        ->assertJsonPath('data.hours', 4.5);
+
+    expect($entry->fresh()->hours)->toEqual('4.50');
+});
+
+it('returns 404 for a non-existent time entry', function () {
+    $this->putJson('/api/time-entries/999999', [
+        'employee_id' => 1,
+        'project_id'  => 1,
+        'task_id'     => 1,
+        'date'        => '2026-05-07',
+        'hours'       => 8.0,
+    ])->assertNotFound();
+});
+
+it('returns 422 when required fields are missing on update', function () {
+    $ctx   = setup();
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+    ]);
+
+    $this->putJson("/api/time-entries/{$entry->id}", [])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['employee_id', 'project_id', 'task_id', 'date', 'hours']);
+});
+
+it('returns 422 when the employee does not belong to the company on update', function () {
+    $ctx          = setup();
+    $otherEmployee = Employee::factory()->create();
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+    ]);
+
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $otherEmployee->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 8.0,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['employee_id']);
+});
+
+it('returns 422 when the project does not belong to the company on update', function () {
+    $ctx          = setup();
+    $otherProject = Project::factory()->create();
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+    ]);
+
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $otherProject->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 8.0,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['project_id']);
+});
+
+it('returns 422 when the employee is not assigned to the project on update', function () {
+    $ctx     = setup();
+    $project2 = Project::factory()->for($ctx['company'])->create();
+    // employee is NOT attached to project2
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+    ]);
+
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $project2->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 8.0,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['employee_id']);
+});
+
+it('returns 422 when the update would create a project conflict on the same date', function () {
+    $ctx      = setup();
+    $project2 = Project::factory()->for($ctx['company'])->create();
+    $ctx['employee']->projects()->attach($project2);
+
+    // Another entry on the same date for a different project
+    TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $project2->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-10',
+        'hours'       => 4.0,
+    ]);
+
+    // Entry we want to update — currently on a different date
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 4.0,
+    ]);
+
+    // Moving it to 2026-05-10 would conflict with the other project on that date
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-10',
+        'hours'       => 4.0,
+    ])->assertUnprocessable();
+});
+
+it('allows updating an entry without triggering a self-conflict', function () {
+    $ctx   = setup();
+    $entry = TimeEntry::factory()->create([
+        'company_id'  => $ctx['company']->id,
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 4.0,
+    ]);
+
+    // Updating only hours — same date, same project — should not conflict with itself
+    $this->putJson("/api/time-entries/{$entry->id}", [
+        'employee_id' => $ctx['employee']->id,
+        'project_id'  => $ctx['project']->id,
+        'task_id'     => $ctx['task']->id,
+        'date'        => '2026-05-07',
+        'hours'       => 6.0,
+    ])->assertOk();
+});

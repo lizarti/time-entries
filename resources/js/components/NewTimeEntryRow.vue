@@ -88,7 +88,7 @@
                 min="0.01"
                 step="0.5"
                 placeholder="0.00"
-                :value="row.hours || ''"
+                :model-value="row.hours || ''"
                 class="w-24"
                 :class="{ 'border-destructive': fieldError('hours') }"
                 @input="emit('update:modelValue', { ...row, hours: parseFloat(($event.target as HTMLInputElement).value) || 0 })"

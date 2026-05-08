@@ -14,3 +14,4 @@ Route::get('/companies/{company}/tasks', [TaskController::class, 'index']);
 
 Route::get('/time-entries', [TimeEntryController::class, 'index']);
 Route::post('/time-entries/bulk', [TimeEntryController::class, 'bulkStore']);
+Route::put('/time-entries/{time_entry}', [TimeEntryController::class, 'update']);

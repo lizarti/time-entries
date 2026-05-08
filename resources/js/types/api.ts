@@ -45,6 +45,15 @@ export interface BulkInsertEntry {
     hours: number;
 }
 
+/** Flat-ID payload sent to PUT /time-entries/:id (company is not updatable). */
+export interface UpdateTimeEntryPayload {
+    employee_id: number;
+    project_id: number;
+    task_id: number;
+    date: string; // "YYYY-MM-DD"
+    hours: number;
+}
+
 /** Full payload sent to POST /time-entries/bulk. */
 export interface BulkInsertPayload {
     entries: BulkInsertEntry[];
@@ -55,4 +64,9 @@ export interface BulkInsertPayload {
 /** Laravel Resource::collection() always wraps arrays in { data: T[] }. */
 export interface ApiCollection<T> {
     data: T[];
+}
+
+/** Laravel JsonResource wraps a single resource in { data: T }. */
+export interface ApiItem<T> {
+    data: T;
 }

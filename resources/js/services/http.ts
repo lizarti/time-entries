@@ -30,4 +30,10 @@ export const http = {
             method: 'POST',
             body: JSON.stringify(body),
         }),
+
+    put: <T>(path: string, body: unknown) =>
+        request<T>(path, {
+            method: 'PUT',
+            body: JSON.stringify(body),
+        }),
 };
