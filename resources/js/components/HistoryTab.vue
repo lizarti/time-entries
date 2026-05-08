@@ -1,31 +1,59 @@
 <template>
     <div class="flex flex-col gap-4 pt-4">
 
-        <!-- Error banner -->
+        <!-- Error -->
         <div
-            v-if="error || saveError"
+            v-if="error"
             class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
         >
-            {{ error || saveError }}
+            {{ error }}
         </div>
 
+        <!-- Filter bar -->
+        <HistoryFilterBar
+            :model-value="filterState"
+            :company-id="selectedCompany?.id ?? null"
+            @update:model-value="setFilters"
+        />
+
+        <!-- Table -->
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Task</TableHead>
-                    <TableHead class="text-right">Hours</TableHead>
-                    <TableHead class="w-10" />
+                    <TableHead
+                        v-for="col in columns"
+                        :key="col.key"
+                        :class="[
+                            col.sortable && 'cursor-pointer select-none hover:text-foreground',
+                            col.key === 'hours' && 'text-right',
+                        ]"
+                        @click="col.sortable ? onSortClick(col.key) : undefined"
+                    >
+                        <div :class="['flex items-center gap-1', col.key === 'hours' && 'justify-end']">
+                            {{ col.label }}
+                            <template v-if="col.sortable">
+                                <ArrowUpIcon
+                                    v-if="params.sort_by === col.key && params.sort_dir === 'asc'"
+                                    class="h-3.5 w-3.5"
+                                />
+                                <ArrowDownIcon
+                                    v-else-if="params.sort_by === col.key"
+                                    class="h-3.5 w-3.5"
+                                />
+                                <ChevronsUpDownIcon
+                                    v-else
+                                    class="h-3.5 w-3.5 opacity-30"
+                                />
+                            </template>
+                        </div>
+                    </TableHead>
                 </TableRow>
             </TableHeader>
 
             <!-- Loading skeletons -->
             <TableBody v-if="loading">
-                <TableRow v-for="n in 5" :key="n">
-                    <TableCell v-for="col in 7" :key="col">
+                <TableRow v-for="n in params.per_page" :key="n">
+                    <TableCell v-for="col in columns" :key="col.key">
                         <Skeleton class="h-4 w-24" />
                     </TableCell>
                 </TableRow>
@@ -34,7 +62,7 @@
             <!-- Empty state -->
             <TableBody v-else-if="entries.length === 0">
                 <TableRow>
-                    <TableCell colspan="7" class="py-12 text-center text-muted-foreground">
+                    <TableCell :colspan="columns.length" class="py-12 text-center text-muted-foreground">
                         No time entries found.
                     </TableCell>
                 </TableRow>
@@ -48,9 +76,9 @@
                     <HistoryEntryRow
                         v-if="editingId === entry.id"
                         :entry="entry"
-                        :errors="editErrors"
-                        :saving="saving"
-                        @save="(payload) => onSave(entry.id, payload)"
+                        :errors="rowErrors"
+                        :saving="savingId === entry.id"
+                        @save="(payload) => onSave(entry, payload)"
                         @cancel="onCancel"
                     />
 
@@ -69,7 +97,7 @@
                                 :disabled="editingId !== null"
                                 @click="onEdit(entry.id)"
                             >
-                                <PencilIcon class="size-4" />
+                                <PencilIcon class="h-4 w-4" />
                             </Button>
                         </TableCell>
                     </TableRow>
@@ -78,85 +106,159 @@
             </TableBody>
         </Table>
 
+        <!-- Pagination -->
+        <div
+            v-if="meta && meta.total > 0"
+            class="flex items-center justify-between text-sm"
+        >
+            <!-- Entry count -->
+            <span class="text-muted-foreground">
+                Showing {{ meta.from }}–{{ meta.to }} of {{ meta.total }} entries
+            </span>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="params.page === 1"
+                    @click="setPage(params.page - 1)"
+                >
+                    <ChevronLeftIcon class="h-4 w-4" />
+                </Button>
+
+                <span class="text-muted-foreground">
+                    {{ meta.current_page }} / {{ meta.last_page }}
+                </span>
+
+                <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="params.page === meta.last_page"
+                    @click="setPage(params.page + 1)"
+                >
+                    <ChevronRightIcon class="h-4 w-4" />
+                </Button>
+
+                <Select
+                    :model-value="String(params.per_page)"
+                    @update:model-value="v => setPerPage(Number(v))"
+                >
+                    <SelectTrigger class="w-[80px] h-8">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <span class="text-muted-foreground">per page</span>
+            </div>
+        </div>
+
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
-import { PencilIcon } from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
+import { ArrowDownIcon, ArrowUpIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsUpDownIcon, PencilIcon } from 'lucide-vue-next';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useTimeEntries } from '@/composables/useTimeEntries';
+import HistoryFilterBar from '@/components/HistoryFilterBar.vue';
 import HistoryEntryRow from '@/components/HistoryEntryRow.vue';
-import type { UpdateTimeEntryPayload } from '@/types/api';
+import type { TimeEntry, TimeEntryFilters, UpdateTimeEntryPayload } from '@/types/api';
 
 const { selectedCompany } = useSelectedCompany();
-const { entries, loading, error, fetch, update } = useTimeEntries();
+const { entries, loading, error, meta, params, setFilters, setSort, setPage, setPerPage, update } = useTimeEntries();
 
-onMounted(() => fetch(selectedCompany.value?.id));
+// ─── Column config ────────────────────────────────────────────────────────────
 
-watch(selectedCompany, (company) => {
-    onCancel();
-    fetch(company?.id);
-});
+const columns = [
+    { key: 'company',  label: 'Company',  sortable: true  },
+    { key: 'date',     label: 'Date',     sortable: true  },
+    { key: 'employee', label: 'Employee', sortable: true  },
+    { key: 'project',  label: 'Project',  sortable: true  },
+    { key: 'task',     label: 'Task',     sortable: true  },
+    { key: 'hours',    label: 'Hours',    sortable: true  },
+    { key: 'actions',  label: '',         sortable: false },
+] as const;
 
-// ─── Edit state ───────────────────────────────────────────────────────────────
+// ─── Edit state ──────────────────────────────────────────────────────────────
+
 const editingId  = ref<number | null>(null);
-const editErrors = ref<Record<string, string>>({});
-const saving     = ref(false);
-const saveError  = ref<string | null>(null);
+const savingId   = ref<number | null>(null);
+const rowErrors  = ref<Record<string, string>>({});
 
 function onEdit(id: number): void {
-    editingId.value  = id;
-    editErrors.value = {};
-    saveError.value  = null;
+    editingId.value = id;
+    rowErrors.value = {};
 }
 
 function onCancel(): void {
-    editingId.value  = null;
-    editErrors.value = {};
-    saveError.value  = null;
+    editingId.value = null;
+    rowErrors.value = {};
 }
 
-async function onSave(id: number, payload: UpdateTimeEntryPayload): Promise<void> {
-    saving.value    = true;
-    saveError.value = null;
-    editErrors.value = {};
-
+async function onSave(entry: TimeEntry, payload: UpdateTimeEntryPayload): Promise<void> {
+    savingId.value  = entry.id;
+    rowErrors.value = {};
     try {
-        await update(id, payload);
+        await update(entry.id, payload);
         editingId.value = null;
     } catch (e: unknown) {
         if (isValidationError(e)) {
-            const fieldErrors: Record<string, string> = {};
-            for (const [field, messages] of Object.entries(e.body.errors)) {
-                fieldErrors[field] = messages[0];
-            }
-            editErrors.value = fieldErrors;
-            saveError.value  = 'Please fix the validation errors below.';
-        } else {
-            saveError.value = e instanceof Error ? e.message : 'Failed to save entry.';
+            rowErrors.value = parseValidationErrors(e.body.errors);
         }
+        // General errors bubble up to the top-level `error` ref via the composable.
     } finally {
-        saving.value = false;
+        savingId.value = null;
     }
 }
 
-// ─── Error type guard ─────────────────────────────────────────────────────────
 function isValidationError(e: unknown): e is { status: number; body: { errors: Record<string, string[]> } } {
-    return (
-        typeof e === 'object' &&
-        e !== null &&
-        'status' in e &&
-        (e as { status: number }).status === 422 &&
-        'body' in e &&
-        typeof (e as { body: unknown }).body === 'object' &&
-        (e as { body: { errors?: unknown } }).body !== null &&
-        'errors' in ((e as { body: object }).body as object)
+    return typeof e === 'object' && e !== null && 'status' in e &&
+           (e as { status: number }).status === 422 && 'body' in e;
+}
+
+function parseValidationErrors(errors: Record<string, string[]>): Record<string, string> {
+    return Object.fromEntries(
+        Object.entries(errors).map(([k, msgs]) => [k, msgs[0]]),
     );
 }
+
+// ─── Sort click ───────────────────────────────────────────────────────────────
+
+function onSortClick(key: string): void {
+    if (params.value.sort_by === key) {
+        setSort(key, params.value.sort_dir === 'asc' ? 'desc' : 'asc');
+    } else {
+        setSort(key, 'desc');
+    }
+}
+
+// ─── Filter bar state (non-company filters only) ──────────────────────────────
+
+const filterState = computed<TimeEntryFilters>(() => ({
+    search:      params.value.search,
+    employee_id: params.value.employee_id,
+    project_id:  params.value.project_id,
+    task_id:     params.value.task_id,
+    date_from:   params.value.date_from,
+    date_to:     params.value.date_to,
+}));
+
+// ─── Company change → reset filters and reload ────────────────────────────────
+
+onMounted(() => setFilters({ company_id: selectedCompany.value?.id }));
+watch(selectedCompany, (company) => setFilters({ company_id: company?.id }));
 </script>

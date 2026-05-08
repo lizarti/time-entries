@@ -10,26 +10,16 @@ export function useEmployees(companyId: Ref<number | null>): {
     const employees = ref<Employee[]>([]);
     const loading = ref(false);
 
-    async function fetch(id: number): Promise<void> {
+    async function fetch(id: number | null): Promise<void> {
         loading.value = true;
         try {
-            employees.value = await employeeService.getByCompany(id);
+            employees.value = await employeeService.getAll(id ?? undefined);
         } finally {
             loading.value = false;
         }
     }
 
-    watch(
-        companyId,
-        (id) => {
-            if (id === null) {
-                employees.value = [];
-            } else {
-                fetch(id);
-            }
-        },
-        { immediate: true },
-    );
+    watch(companyId, (id) => fetch(id), { immediate: true });
 
     return { employees, loading };
 }

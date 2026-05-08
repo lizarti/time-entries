@@ -45,28 +45,82 @@ export interface BulkInsertEntry {
     hours: number;
 }
 
-/** Flat-ID payload sent to PUT /time-entries/:id (company is not updatable). */
-export interface UpdateTimeEntryPayload {
-    employee_id: number;
-    project_id: number;
-    task_id: number;
-    date: string; // "YYYY-MM-DD"
-    hours: number;
-}
-
 /** Full payload sent to POST /time-entries/bulk. */
 export interface BulkInsertPayload {
     entries: BulkInsertEntry[];
 }
 
-// ─── API envelope ─────────────────────────────────────────────────────────────
+/** Payload sent to PUT /time-entries/:id (company not updatable). */
+export interface UpdateTimeEntryPayload {
+    employee_id: number;
+    project_id:  number;
+    task_id:     number;
+    date:        string;
+    hours:       number;
+}
+
+// ─── Filters / sort / pagination ──────────────────────────────────────────────
+
+export interface TimeEntryFilters {
+    company_id?: number;
+    employee_id?: number;
+    project_id?: number;
+    task_id?: number;
+    date_from?: string;
+    date_to?: string;
+    search?: string;
+}
+
+export interface TimeEntrySortParams {
+    sort_by?: string;
+    sort_dir?: 'asc' | 'desc';
+}
+
+export interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
+/** Combined params passed to getAll(). */
+export type TimeEntryListParams = TimeEntryFilters &
+    TimeEntrySortParams & {
+        page?: number;
+        per_page?: number;
+    };
+
+// ─── Summary ──────────────────────────────────────────────────────────────────
+
+export interface SummaryRow {
+    label: string;
+    hours: number;
+}
+
+export interface SummaryData {
+    by_employee: SummaryRow[];
+    by_project: SummaryRow[];
+    by_task: SummaryRow[];
+    by_date: SummaryRow[];
+    by_company: SummaryRow[];
+}
+
+// ─── API envelopes ────────────────────────────────────────────────────────────
 
 /** Laravel Resource::collection() always wraps arrays in { data: T[] }. */
 export interface ApiCollection<T> {
     data: T[];
 }
 
-/** Laravel JsonResource wraps a single resource in { data: T }. */
+/** Laravel's paginated resource collection adds a meta key. */
+export interface ApiPage<T> {
+    data: T[];
+    meta: PaginationMeta;
+}
+
+/** Laravel JsonResource wraps a single resource as { data: T }. */
 export interface ApiItem<T> {
     data: T;
 }

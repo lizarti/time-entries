@@ -10,26 +10,16 @@ export function useProjects(companyId: Ref<number | null>): {
     const projects = ref<Project[]>([]);
     const loading = ref(false);
 
-    async function fetch(id: number): Promise<void> {
+    async function fetch(id: number | null): Promise<void> {
         loading.value = true;
         try {
-            projects.value = await projectService.getByCompany(id);
+            projects.value = await projectService.getAll(id ?? undefined);
         } finally {
             loading.value = false;
         }
     }
 
-    watch(
-        companyId,
-        (id) => {
-            if (id === null) {
-                projects.value = [];
-            } else {
-                fetch(id);
-            }
-        },
-        { immediate: true },
-    );
+    watch(companyId, (id) => fetch(id), { immediate: true });
 
     return { projects, loading };
 }
