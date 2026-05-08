@@ -20,13 +20,29 @@
 
         <!-- Date -->
         <TableCell>
-            <Input
-                type="date"
-                :value="row.date"
-                class="w-38"
-                :class="{ 'border-destructive': fieldError('date') }"
-                @input="emit('update:modelValue', { ...row, date: ($event.target as HTMLInputElement).value })"
-            />
+            <Popover>
+                <PopoverTrigger as-child>
+                    <Button
+                        variant="outline"
+                        :class="cn(
+                            'w-38 justify-start text-left font-normal',
+                            !row.date && 'text-muted-foreground',
+                            fieldError('date') && 'border-destructive',
+                        )"
+                    >
+                        <CalendarIcon data-icon="inline-start" />
+                        {{ row.date ? df.format(parseDate(row.date).toDate(getLocalTimeZone())) : 'Pick a date' }}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                        :model-value="row.date ? parseDate(row.date) : undefined"
+                        layout="month-and-year"
+                        initial-focus
+                        @update:model-value="(v) => v && emit('update:modelValue', { ...row, date: v.toString() })"
+                    />
+                </PopoverContent>
+            </Popover>
         </TableCell>
 
         <!-- Employee -->
@@ -90,10 +106,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { XIcon } from 'lucide-vue-next';
+import { CalendarIcon, XIcon } from 'lucide-vue-next';
+import { parseDate, getLocalTimeZone, DateFormatter } from '@internationalized/date';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import AppCombobox from '@/components/AppCombobox.vue';
 import { useCompanies } from '@/composables/useCompanies';
 import { useEmployees } from '@/composables/useEmployees';
@@ -113,6 +133,8 @@ const emit = defineEmits<{
 }>();
 
 const row = computed(() => props.modelValue);
+
+const df = new DateFormatter('en-US', { dateStyle: 'medium' });
 
 // ─── Effective company ID ──────────────────────────────────────────────────────
 const effectiveCompanyId = computed<number | null>(() =>
