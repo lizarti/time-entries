@@ -9,6 +9,15 @@
             {{ error }}
         </div>
 
+        <!-- Summary -->
+        <HistorySummary
+            v-if="loading || (meta?.total ?? 0) > 0"
+            :by-employee="summary?.by_employee ?? []"
+            :by-project="summary?.by_project ?? []"
+            :by-company="summary?.by_company ?? []"
+            :loading="loading"
+        />
+
         <!-- Filter bar -->
         <HistoryFilterBar
             :model-value="filterState"
@@ -176,10 +185,11 @@ import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useTimeEntries } from '@/composables/useTimeEntries';
 import HistoryFilterBar from '@/components/HistoryFilterBar.vue';
 import HistoryEntryRow from '@/components/HistoryEntryRow.vue';
+import HistorySummary from '@/components/summary/HistorySummary.vue';
 import type { TimeEntry, TimeEntryFilters, UpdateTimeEntryPayload } from '@/types/api';
 
 const { selectedCompany } = useSelectedCompany();
-const { entries, loading, error, meta, params, setFilters, setSort, setPage, setPerPage, update } = useTimeEntries();
+const { entries, loading, error, meta, summary, params, setFilters, setSort, setPage, setPerPage, update } = useTimeEntries();
 
 // ─── Column config ────────────────────────────────────────────────────────────
 
