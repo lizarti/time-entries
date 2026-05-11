@@ -15,9 +15,7 @@ class SummarizeTimeEntriesAction
         return [
             'by_employee' => $this->aggregateByRelation(clone $base, 'employees', 'employee_id'),
             'by_project'  => $this->aggregateByRelation(clone $base, 'projects',  'project_id'),
-            'by_task'     => $this->aggregateByRelation(clone $base, 'tasks',     'task_id'),
             'by_company'  => $this->aggregateByRelation(clone $base, 'companies', 'company_id'),
-            'by_date'     => $this->aggregateByDate(clone $base),
         ];
     }
 

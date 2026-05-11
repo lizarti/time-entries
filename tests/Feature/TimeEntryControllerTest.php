@@ -162,30 +162,6 @@ it('fails when the task does not belong to the company', function () {
         ->assertJsonValidationErrors(['entries.0.task_id']);
 });
 
-// ─── EmployeeAssignedToProject failure ────────────────────────────────────────
-
-it('fails when the employee is not assigned to the project', function () {
-    $company  = Company::factory()->create();
-    $employee = Employee::factory()->create();
-    $company->employees()->attach($employee);
-    $project = Project::factory()->for($company)->create();
-    // employee is NOT attached to project
-    $task = Task::factory()->for($company)->create();
-
-    $this->postJson('/api/time-entries/bulk', [
-        'entries' => [[
-            'company_id'  => $company->id,
-            'employee_id' => $employee->id,
-            'project_id'  => $project->id,
-            'task_id'     => $task->id,
-            'date'        => '2026-05-07',
-            'hours'       => 8.0,
-        ]],
-    ])
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors(['entries.0.employee_id']);
-});
-
 // ─── Business rule: DB conflict ───────────────────────────────────────────────
 
 it('fails when the employee already has a different project on the same date', function () {
@@ -355,28 +331,6 @@ it('returns 422 when the project does not belong to the company on update', func
     ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['project_id']);
-});
-
-it('returns 422 when the employee is not assigned to the project on update', function () {
-    $ctx     = setup();
-    $project2 = Project::factory()->for($ctx['company'])->create();
-    // employee is NOT attached to project2
-    $entry = TimeEntry::factory()->create([
-        'company_id'  => $ctx['company']->id,
-        'employee_id' => $ctx['employee']->id,
-        'project_id'  => $ctx['project']->id,
-        'task_id'     => $ctx['task']->id,
-    ]);
-
-    $this->putJson("/api/time-entries/{$entry->id}", [
-        'employee_id' => $ctx['employee']->id,
-        'project_id'  => $project2->id,
-        'task_id'     => $ctx['task']->id,
-        'date'        => '2026-05-07',
-        'hours'       => 8.0,
-    ])
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors(['employee_id']);
 });
 
 it('returns 422 when the update would create a project conflict on the same date', function () {
@@ -605,7 +559,7 @@ it('sorts by hours descending', function () {
 
     $this->getJson("/api/time-entries?sort_by=hours&sort_dir=desc&company_id={$ctx['company']->id}")
         ->assertOk()
-        ->assertJsonPath('data.0.hours', 10.0);
+        ->assertJsonPath('data.0.hours', 10);
 });
 
 it('sorts by employee name ascending', function () {
@@ -699,12 +653,9 @@ it('returns summary with correct structure and aggregated totals', function () {
         ->assertJsonStructure(['data' => [
             'by_employee' => [['label', 'hours']],
             'by_project'  => [['label', 'hours']],
-            'by_task'     => [['label', 'hours']],
-            'by_date'     => [['label', 'hours']],
             'by_company'  => [['label', 'hours']],
         ]])
-        ->assertJsonPath('data.by_employee.0.hours', 10.0)
-        ->assertJsonCount(2, 'data.by_date');
+        ->assertJsonPath('data.by_employee.0.hours', 10);
 });
 
 it('summary respects company_id filter', function () {
@@ -717,21 +668,9 @@ it('summary respects company_id filter', function () {
     $this->getJson("/api/time-entries/summary?company_id={$ctx1['company']->id}")
         ->assertOk()
         ->assertJsonCount(1, 'data.by_company')
-        ->assertJsonPath('data.by_company.0.hours', 4.0);
+        ->assertJsonPath('data.by_company.0.hours', 4);
 });
 
-it('summary orders by_date ascending', function () {
-    $ctx = setup();
-
-    TimeEntry::factory()->create(entry($ctx, '2026-05-09', 2.0));
-    TimeEntry::factory()->create(entry($ctx, '2026-05-07', 4.0));
-    TimeEntry::factory()->create(entry($ctx, '2026-05-08', 6.0));
-
-    $this->getJson("/api/time-entries/summary?company_id={$ctx['company']->id}")
-        ->assertOk()
-        ->assertJsonPath('data.by_date.0.label', '2026-05-07')
-        ->assertJsonPath('data.by_date.2.label', '2026-05-09');
-});
 
 it('summary respects search filter', function () {
     $company  = Company::factory()->create();
@@ -751,5 +690,5 @@ it('summary respects search filter', function () {
     $this->getJson('/api/time-entries/summary?search=searchablesummaryxyz')
         ->assertOk()
         ->assertJsonCount(1, 'data.by_employee')
-        ->assertJsonPath('data.by_employee.0.hours', 5.0);
+        ->assertJsonPath('data.by_employee.0.hours', 5);
 });

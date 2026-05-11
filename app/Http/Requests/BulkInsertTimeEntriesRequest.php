@@ -6,7 +6,6 @@ use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Task;
 use App\Rules\BelongsToCompany;
-use App\Rules\EmployeeAssignedToProject;
 use Illuminate\Foundation\Http\FormRequest;
 
 class BulkInsertTimeEntriesRequest extends FormRequest

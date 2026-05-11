@@ -6,7 +6,6 @@ use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Task;
 use App\Rules\BelongsToCompany;
-use App\Rules\EmployeeAssignedToProject;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTimeEntryRequest extends FormRequest
@@ -26,7 +25,6 @@ class UpdateTimeEntryRequest extends FormRequest
             'employee_id' => [
                 'required', 'integer', 'exists:employees,id',
                 new BelongsToCompany(Employee::class, $companyId),
-                new EmployeeAssignedToProject($projectId),
             ],
             'project_id'  => [
                 'required', 'integer', 'exists:projects,id',

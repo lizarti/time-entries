@@ -4,6 +4,7 @@ namespace App\Actions\TimeEntry;
 
 use App\Exceptions\ConflictException;
 use App\Models\TimeEntry;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -42,7 +43,7 @@ class BulkInsertTimeEntriesAction
     private function checkDatabaseConflict(array $entry): void
     {
         $conflict = TimeEntry::where('employee_id', $entry['employee_id'])
-            ->where('date', $entry['date'])
+            ->where('date', Carbon::parse($entry['date'])->startOfDay())
             ->where('project_id', '!=', $entry['project_id'])
             ->exists();
 

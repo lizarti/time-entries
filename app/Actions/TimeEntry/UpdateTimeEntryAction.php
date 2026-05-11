@@ -4,6 +4,8 @@ namespace App\Actions\TimeEntry;
 
 use App\Exceptions\ConflictException;
 use App\Models\TimeEntry;
+use Carbon\Carbon;
+use DB;
 
 class UpdateTimeEntryAction
 {
@@ -19,7 +21,7 @@ class UpdateTimeEntryAction
     private function checkConflict(TimeEntry $entry, array $data): void
     {
         $conflict = TimeEntry::where('employee_id', $data['employee_id'])
-            ->where('date', $data['date'])
+            ->where('date', Carbon::parse($data['date'])->startOfDay())
             ->where('project_id', '!=', $data['project_id'])
             ->where('id', '!=', $entry->id)
             ->exists();
