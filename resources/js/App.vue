@@ -1,29 +1,35 @@
 <template>
-    <div class="min-h-screen bg-background text-foreground">
-        <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6">
+    <div class="min-h-screen bg-background">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
 
-            <!-- Header -->
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold tracking-tight">Time Tracker</h1>
-                <CompanyDropdown />
+                <!-- Toolbar -->
+                <div class="flex items-center justify-between border-b border-border px-6 py-5">
+                    <h1 class="text-2xl font-bold tracking-tight text-foreground">
+                        Time Tracker
+                    </h1>
+                    <CompanyDropdown />
+                </div>
+
+                <!-- Tab content -->
+                <div class="px-6 py-5">
+                    <Tabs default-value="new-entries">
+                        <TabsList>
+                            <TabsTrigger value="new-entries">New Entries</TabsTrigger>
+                            <TabsTrigger value="history">History</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="new-entries">
+                            <NewEntriesTab />
+                        </TabsContent>
+
+                        <TabsContent value="history">
+                            <HistoryTab />
+                        </TabsContent>
+                    </Tabs>
+                </div>
+
             </div>
-
-            <!-- Tabs -->
-            <Tabs default-value="new-entries">
-                <TabsList>
-                    <TabsTrigger value="new-entries">New Entries</TabsTrigger>
-                    <TabsTrigger value="history">History</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="new-entries">
-                    <NewEntriesTab />
-                </TabsContent>
-
-                <TabsContent value="history">
-                    <HistoryTab />
-                </TabsContent>
-            </Tabs>
-
         </div>
     </div>
 </template>

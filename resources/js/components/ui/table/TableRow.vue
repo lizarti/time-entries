@@ -10,7 +10,7 @@ const props = defineProps<{
 <template>
   <tr
     data-slot="table-row"
-    :class="cn('hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors has-aria-expanded:bg-muted/50', props.class)"
+    :class="cn('border-b border-[#F0F1F3] hover:bg-[#FAFAFA] transition-colors has-aria-expanded:bg-[#FAFAFA]', props.class)"
   >
     <slot />
   </tr>

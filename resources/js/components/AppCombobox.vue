@@ -1,17 +1,20 @@
 <template>
     <Popover v-model:open="open">
         <PopoverTrigger as-child>
-            <Button
-                variant="outline"
+            <button
+                type="button"
                 role="combobox"
                 :aria-expanded="open"
                 :disabled="disabled"
-                type="button"
-                :class="cn('w-full justify-between font-normal', !selectedLabel && 'text-muted-foreground', props.class)"
+                :class="cn(
+                    'flex h-9 w-full items-center justify-between rounded-md border border-border bg-white px-3 text-sm text-foreground transition-colors hover:border-ring/40 focus:outline-none focus:border-primary/60 focus:ring-3 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50',
+                    !selectedLabel && 'text-muted-foreground',
+                    props.class,
+                )"
             >
                 <span class="truncate">{{ selectedLabel || placeholder }}</span>
-                <ChevronsUpDownIcon class="shrink-0 opacity-50" />
-            </Button>
+                <ChevronsUpDownIcon class="ml-2 size-4 shrink-0 opacity-40" />
+            </button>
         </PopoverTrigger>
         <PopoverContent class="w-[--reka-popover-trigger-width] p-0">
             <Command
@@ -41,7 +44,6 @@ import { ref, computed, watch } from 'vue';
 import { ChevronsUpDownIcon } from 'lucide-vue-next';
 import type { HTMLAttributes } from 'vue';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
