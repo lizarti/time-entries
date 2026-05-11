@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\TimeEntry\BulkInsertTimeEntriesAction;
 use App\Actions\TimeEntry\UpdateTimeEntryAction;
+use App\Ai\Agents\TimeTracker;
 use App\Http\Requests\BulkInsertTimeEntriesRequest;
 use App\Http\Requests\UpdateTimeEntryRequest;
 use App\Http\Resources\TimeEntryResource;
@@ -171,5 +172,23 @@ class TimeEntryController extends Controller
                     });
                 },
             );
+    }
+
+     public function parseUsingAI(Request $request): JsonResponse {
+        $agent = new TimeTracker();
+        $userMessage = $request->input('message');
+        if (empty($userMessage)) {
+            return response()->json(['message' => 'Message is required.'], 400);
+        }
+
+        try {
+            $agentResponse = $agent->prompt($userMessage);
+            $jsonResponse = json_decode($agentResponse->text);
+    
+            return response()->json($jsonResponse, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Unable to create time entry. Invalid or missing information.'], 422);
+        }
+
     }
 }

@@ -32,8 +32,7 @@ class BulkInsertTimeEntriesRequest extends FormRequest
             $rules["entries.{$index}.company_id"]  = ['required', 'integer', 'exists:companies,id'];
             $rules["entries.{$index}.employee_id"] = [
                 'required', 'integer', 'exists:employees,id',
-                new BelongsToCompany(Employee::class, $companyId),
-                new EmployeeAssignedToProject($projectId),
+                new BelongsToCompany(Employee::class, $companyId)
             ];
             $rules["entries.{$index}.project_id"]  = [
                 'required', 'integer', 'exists:projects,id',
