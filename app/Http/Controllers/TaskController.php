@@ -10,16 +10,18 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TaskController extends Controller
 {
-    public function index(Request $request, ?Company $company = null): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        if ($company === null && $request->filled('company_id')) {
-            $company = Company::findOrFail((int) $request->input('company_id'));
+        if ($request->filled('company_id')) {
+            $company = Company::findOrFail($request->integer('company_id'));
+
+            return TaskResource::collection(
+                $company->tasks()->orderBy('name')->get()
+            );
         }
 
-        $tasks = $company
-            ? $company->tasks()->orderBy('name')->get()
-            : Task::orderBy('name')->get();
-
-        return TaskResource::collection($tasks);
+        return TaskResource::collection(
+            Task::orderBy('name')->get()
+        );
     }
 }

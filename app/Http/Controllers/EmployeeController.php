@@ -10,16 +10,18 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends Controller
 {
-    public function index(Request $request, ?Company $company = null): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        if ($company === null && $request->filled('company_id')) {
-            $company = Company::findOrFail((int) $request->input('company_id'));
+        if ($request->filled('company_id')) {
+            $company = Company::findOrFail($request->integer('company_id'));
+
+            return EmployeeResource::collection(
+                $company->employees()->orderBy('name')->get()
+            );
         }
 
-        $employees = $company
-            ? $company->employees()->orderBy('name')->get()
-            : Employee::orderBy('name')->get();
-
-        return EmployeeResource::collection($employees);
+        return EmployeeResource::collection(
+            Employee::orderBy('name')->get()
+        );
     }
 }

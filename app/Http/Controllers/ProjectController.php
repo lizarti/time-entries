@@ -10,16 +10,18 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProjectController extends Controller
 {
-    public function index(Request $request, ?Company $company = null): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        if ($company === null && $request->filled('company_id')) {
-            $company = Company::findOrFail((int) $request->input('company_id'));
+        if ($request->filled('company_id')) {
+            $company = Company::findOrFail($request->integer('company_id'));
+
+            return ProjectResource::collection(
+                $company->projects()->orderBy('name')->get()
+            );
         }
 
-        $projects = $company
-            ? $company->projects()->orderBy('name')->get()
-            : Project::orderBy('name')->get();
-
-        return ProjectResource::collection($projects);
+        return ProjectResource::collection(
+            Project::orderBy('name')->get()
+        );
     }
 }

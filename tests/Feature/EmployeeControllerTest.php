@@ -10,13 +10,21 @@ it('returns employees belonging to the given company', function () {
 
     Employee::factory()->create(); // belongs to no company
 
-    $this->getJson("/api/companies/{$company->id}/employees")
+    $this->getJson("/api/employees?company_id={$company->id}")
         ->assertOk()
         ->assertJsonCount(2, 'data')
         ->assertJsonStructure(['data' => [['id', 'name']]]);
 });
 
 it('returns 404 when the company does not exist', function () {
-    $this->getJson('/api/companies/999/employees')
+    $this->getJson('/api/employees?company_id=999')
         ->assertNotFound();
+});
+
+it('returns all employees when no company_id is given', function () {
+    Employee::factory()->count(3)->create();
+
+    $this->getJson('/api/employees')
+        ->assertOk()
+        ->assertJsonCount(3, 'data');
 });
