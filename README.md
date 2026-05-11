@@ -247,11 +247,23 @@ OPENAI_API_KEY=your-key-here
 
 ## Running Tests
 
+The test suite requires a dedicated MySQL `testing` database. The simplest way to have it available is via **Laravel Sail** (Docker — requires Docker Desktop or Docker Engine):
+
+```bash
+# Start the containers — MySQL and the testing database are provisioned automatically
+./vendor/bin/sail up -d
+
+# Run the suite inside the container
+./vendor/bin/sail php vendor/bin/pest
+```
+
+If you prefer to run without Docker, create a `testing` database in your local MySQL instance, confirm the credentials in `phpunit.xml` match, then:
+
 ```bash
 php vendor/bin/pest
 ```
 
-The test suite uses a dedicated `testing` MySQL database (provisioned automatically by Sail) and `RefreshDatabase` to isolate each test. **65+ tests** cover:
+The suite uses `RefreshDatabase` to isolate every test. **70+ tests** cover:
 
 - Model relationships
 - All API endpoints (listing, filtering, sorting, pagination)
