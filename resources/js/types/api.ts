@@ -37,6 +37,7 @@ export interface TimeEntry {
 
 /** One row in the bulk-insert payload — flat IDs sent to POST /time-entries/bulk. */
 export interface BulkInsertEntry {
+    _id: string; // temporary ID used on frontend for tracking rows before they get real IDs from backend
     company_id: number;
     employee_id: number;
     project_id: number;

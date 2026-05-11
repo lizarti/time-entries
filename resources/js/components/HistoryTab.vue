@@ -12,11 +12,11 @@
 
         <hr v-if="loading || (meta?.total ?? 0) > 0" class="border-border" />
 
-        <h4 class="text-2xl font-semibold">Time entries</h4>
-
+        
         <!-- Table card -->
         <div class="rounded-lg border bg-card">
             <div class="flex flex-col gap-5 p-6">
+                <h4 class="text-2xl font-semibold">Time entries</h4>
 
                 <!-- Error -->
                 <div

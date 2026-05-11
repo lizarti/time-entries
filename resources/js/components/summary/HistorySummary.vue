@@ -1,10 +1,7 @@
 <template>
     <div>
-
-        <h4 class="text-2xl font-semibold">Summary</h4>
-
         <!-- Cards -->
-        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SummaryCard
                 v-for="card in cards"
                 :key="card.title"

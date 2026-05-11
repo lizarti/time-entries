@@ -1,5 +1,5 @@
 <template>
-    <TableRow>
+    <TableRow :class="{ flash }">
         <!-- Company -->
         <TableCell>
             <div class="flex flex-col gap-1">
@@ -118,7 +118,7 @@
                     min="0.01"
                     step="0.5"
                     placeholder="0.00"
-                    :value="row.hours || ''"
+                    :model-value="row.hours || ''"
                     class="w-24"
                     :class="{ 'border-destructive': fieldError('hours') }"
                     @input="onHoursChange"
@@ -131,6 +131,10 @@
 
         <!-- Remove -->
         <TableCell>
+            <!-- clone -->
+            <Button variant="ghost" size="icon" @click="emit('clone')">
+                <CopyIcon class="size-4" />
+            </Button>
             <Button variant="ghost" size="icon" @click="emit('remove')">
                 <XIcon class="size-4" />
             </Button>
@@ -139,8 +143,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { CalendarIcon, XIcon } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
+import { CalendarIcon, XIcon, CopyIcon } from 'lucide-vue-next';
 import { parseDate, getLocalTimeZone, DateFormatter } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -165,8 +169,11 @@ const props = defineProps<{
 const emit = defineEmits<{
     'update:modelValue': [value: BulkInsertEntry];
     'remove': [];
+    'clone': [];
     'clear-error': [field: string];
 }>();
+
+const flash = ref(true)
 
 const row = computed(() => props.modelValue);
 
@@ -254,4 +261,37 @@ const lockedCompanyName = computed<string>(() => {
 function fieldError(field: string): string | undefined {
     return props.errors[field];
 }
+
+onMounted(() => {
+    // Autofocus the first empty field when the row is created
+    const el = document.querySelector('.flash [placeholder]:not([value])') as HTMLElement | null;
+    if (el) el.focus();
+
+    // Remove flash class after animation completes
+    setTimeout(() => {
+        flash.value = false;
+    }, 600);
+
+
+});
 </script>
+
+
+<style scoped>
+.flash {
+  animation: flash-bg 0.6s ease;
+}
+
+@keyframes flash-bg {
+  from {
+    background-color:  color-mix(
+        in srgb,
+        var(--primary) 6%,
+        transparent
+    );
+  }
+  to {
+    background-color: transparent;
+  }
+}
+</style>

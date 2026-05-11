@@ -52,27 +52,27 @@ class TimeEntry extends Model
         return $query
             ->when(
                 ! empty($filters['company_id']),
-                fn ($q) => $q->where('company_id', $filters['company_id']),
+                fn ($q) => $q->where('time_entries.company_id', $filters['company_id']),
             )
             ->when(
                 ! empty($filters['employee_id']),
-                fn ($q) => $q->where('employee_id', $filters['employee_id']),
+                fn ($q) => $q->where('time_entries.employee_id', $filters['employee_id']),
             )
             ->when(
                 ! empty($filters['project_id']),
-                fn ($q) => $q->where('project_id', $filters['project_id']),
+                fn ($q) => $q->where('time_entries.project_id', $filters['project_id']),
             )
             ->when(
                 ! empty($filters['task_id']),
-                fn ($q) => $q->where('task_id', $filters['task_id']),
+                fn ($q) => $q->where('time_entries.task_id', $filters['task_id']),
             )
             ->when(
                 ! empty($filters['date_from']),
-                fn ($q) => $q->whereDate('date', '>=', $filters['date_from']),
+                fn ($q) => $q->whereDate('time_entries.date', '>=', $filters['date_from']),
             )
             ->when(
                 ! empty($filters['date_to']),
-                fn ($q) => $q->whereDate('date', '<=', $filters['date_to']),
+                fn ($q) => $q->whereDate('time_entries.date', '<=', $filters['date_to']),
             )
             ->when(
                 ! empty($filters['search']),

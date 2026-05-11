@@ -1,10 +1,13 @@
 <template>
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-5 rounded-lg border bg-card p-6">
+
+        <h4 class="text-2xl font-semibold">New Entries</h4>
 
         <!-- AI input -->
         <div class="rounded-lg border border-border bg-muted/40 px-4 py-4">
             <AiEntryInput @entry-parsed="onEntryParsed" />
         </div>
+
 
         <div class="relative">
             <div class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
@@ -39,18 +42,20 @@
                     <TableHead>Project</TableHead>
                     <TableHead>Task</TableHead>
                     <TableHead>Hours</TableHead>
-                    <TableHead class="w-10" />
+                    <TableHead class="w-16" />
                 </TableRow>
             </TableHeader>
             <TableBody>
+                <TransitionGroup name="list" tag="ul"></TransitionGroup>
                 <NewTimeEntryRow
                     v-for="(row, index) in rows"
-                    :key="index"
+                    :key="row._id"
                     :model-value="row"
                     :locked-company-id="selectedCompany?.id ?? null"
                     :errors="rowErrors[index] ?? {}"
                     @update:model-value="(updated) => onUpdateRow(index, updated)"
                     @remove="removeRow(index)"
+                    @clone="cloneRow(index)"
                     @clear-error="(field) => clearRowError(index, field)"
                 />
             </TableBody>
@@ -74,7 +79,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { PlusIcon, Loader2Icon } from 'lucide-vue-next';
+import { PlusIcon, Loader2Icon, CopyIcon } from 'lucide-vue-next';
 import {
     Table, TableBody, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -91,11 +96,12 @@ const { loading, bulkInsert } = useTimeEntries();
 // ─── Row state ────────────────────────────────────────────────────────────────
 function blankRow(): BulkInsertEntry {
     return {
+        _id: crypto.randomUUID(),
         company_id:  selectedCompany.value?.id ?? 0,
         employee_id: 0,
         project_id:  0,
         task_id:     0,
-        date:        '',
+        date:        new Date().toISOString().split('T')[0], // Default to today
         hours:       0,
     };
 }
@@ -104,6 +110,13 @@ const rows = ref<BulkInsertEntry[]>([blankRow()]);
 
 function addRow(): void {
     rows.value.push(blankRow());
+}
+
+function cloneRow(index: number): void {
+    const rowToClone = rows.value[index];
+    if (rowToClone) {
+        rows.value.splice(index + 1, 0, { ...rowToClone });
+    }
 }
 
 function removeRow(index: number): void {

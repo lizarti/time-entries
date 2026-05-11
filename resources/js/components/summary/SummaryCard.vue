@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded-lg border bg-card p-3 text-card-foreground">
+    <div class="rounded-lg border bg-card p-3 text-card-foreground flex flex-col">
 
         <!-- Title -->
         <p class="mb-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -13,7 +13,7 @@
 
         <!-- Data rows -->
         <template v-else>
-            <div class="max-h-52 space-y-px overflow-y-auto">
+            <div class="max-h-52 space-y-px overflow-y-auto grow">
                 <div
                     v-for="row in rows"
                     :key="row.label"
