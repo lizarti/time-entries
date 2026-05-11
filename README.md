@@ -42,41 +42,6 @@ This project was built as a technical assessment for a full-stack role.
 | Styling | Tailwind CSS v4 |
 | HTTP | Native Fetch API |
 
-**Infrastructure**
-|---|---|
-| Server | PHP built-in (`php artisan serve`) or any standard web server |
-
----
-
-## Domain Model
-
-```
-Company ──< Project          (one company has many projects)
-Company ──< Task             (one company has many tasks; tasks are NOT scoped to a project)
-Company >──< Employee        (many-to-many via company_employee)
-Employee >──< Project        (many-to-many via employee_project — assignment)
-TimeEntry >── Company
-TimeEntry >── Employee
-TimeEntry >── Project
-TimeEntry >── Task
-```
-
-### Business rules
-
-1. An employee can only work on **one project per date**, but can log **multiple tasks** on the same project and date.
-2. The `employee`, `project`, and `task` on a time entry must all belong to the **same company**.
-3. The employee must be **assigned** to the time entry's project.
-
-### Validation layers
-
-| Rule | Where |
-|---|---|
-| Required fields, types, formats | `FormRequest` |
-| Employee / Project / Task belong to the same Company | `FormRequest` — custom `BelongsToCompany` rule |
-| Employee is assigned to the Project | `FormRequest` — custom `EmployeeAssignedToProject` rule |
-| Employee has no different project on that date (DB check) | `BulkInsertTimeEntriesAction` |
-| Employee conflict within the same submitted batch | `BulkInsertTimeEntriesAction` |
-
 ---
 
 ## Architecture
