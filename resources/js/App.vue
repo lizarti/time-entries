@@ -1,42 +1,45 @@
 <template>
     <div class="min-h-screen bg-background">
-        <div class="max-w-7xl mx-auto px-6 py-8">
-            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
 
-                <!-- Toolbar -->
-                <div class="flex items-center justify-between border-b border-border px-6 py-5">
-                    <h1 class="text-2xl font-bold tracking-tight text-foreground">
-                        Time Tracker
-                    </h1>
-                    <CompanyDropdown />
-                </div>
+        <!-- Sticky header -->
+        <header class="sticky top-0 z-10 border-b border-border bg-card">
+            <AppToolbar />
+        </header>
 
-                <!-- Tab content -->
-                <div class="px-6 py-5">
-                    <Tabs default-value="new-entries">
-                        <TabsList>
-                            <TabsTrigger value="new-entries">New Entries</TabsTrigger>
-                            <TabsTrigger value="history">History</TabsTrigger>
-                        </TabsList>
+        <!-- Page content -->
+        <div class="mx-auto max-w-7xl px-6 py-6">
+            <Tabs default-value="new-entries" class="gap-6">
+                <TabsList class="flex h-auto w-full justify-start rounded-none bg-transparent p-0">
+                    <TabsTrigger
+                        value="new-entries"
+                        class="relative h-auto flex-none rounded-none bg-transparent px-5 py-3 text-sm font-semibold text-muted-foreground shadow-none transition-colors hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none after:absolute after:bottom-[-1px] after:left-0 after:h-0.5 after:w-full after:bg-primary after:opacity-0 after:transition-opacity data-[state=active]:after:opacity-100"
+                    >New Entries</TabsTrigger>
+                    <TabsTrigger
+                        value="history"
+                        class="relative h-auto flex-none rounded-none bg-transparent px-5 py-3 text-sm font-semibold text-muted-foreground shadow-none transition-colors hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none after:absolute after:bottom-[-1px] after:left-0 after:h-0.5 after:w-full after:bg-primary after:opacity-0 after:transition-opacity data-[state=active]:after:opacity-100"
+                    >History</TabsTrigger>
+                </TabsList>
 
-                        <TabsContent value="new-entries">
+                <TabsContent value="new-entries">
+                    <div class="rounded-lg border bg-card">
+                        <div class="p-6">
                             <NewEntriesTab />
-                        </TabsContent>
+                        </div>
+                    </div>
+                </TabsContent>
 
-                        <TabsContent value="history">
-                            <HistoryTab />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-
-            </div>
+                <TabsContent value="history">
+                    <HistoryTab />
+                </TabsContent>
+            </Tabs>
         </div>
+
     </div>
 </template>
 
 <script setup lang="ts">
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CompanyDropdown from '@/components/CompanyDropdown.vue';
 import NewEntriesTab from '@/components/NewEntriesTab.vue';
 import HistoryTab from '@/components/HistoryTab.vue';
+import AppToolbar from '@/components/AppToolbar.vue';
 </script>

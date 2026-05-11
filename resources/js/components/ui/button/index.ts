@@ -8,22 +8,22 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'rounded-full bg-primary text-primary-foreground font-semibold hover:bg-[#E85A24]',
-        outline: 'rounded-full border-border bg-card text-foreground font-medium hover:bg-[#FAFAFA] aria-expanded:bg-[#FAFAFA]',
-        secondary: 'rounded-full bg-secondary text-secondary-foreground font-medium hover:bg-[#FAFAFA]',
-        ghost: 'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground',
-        destructive: 'bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 text-destructive focus-visible:border-destructive/40',
+        default: 'rounded-md bg-primary text-primary-foreground font-semibold hover:bg-[#E85A24]',
+        outline: 'rounded-md border-border bg-card text-foreground font-medium hover:bg-[#FAFAFA] aria-expanded:bg-[#FAFAFA]',
+        secondary: 'rounded-md bg-secondary text-secondary-foreground font-medium hover:bg-[#FAFAFA]',
+        ghost: 'rounded-md hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground',
+        destructive: 'rounded-md bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 text-destructive focus-visible:border-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
         'default': 'h-9 gap-1.5 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
-        'xs': 'h-6 gap-1 rounded-full px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*=size-])]:size-3',
-        'sm': 'h-7 gap-1 rounded-full px-3 text-[0.8rem] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*=size-])]:size-3.5',
+        'xs': 'h-6 gap-1 rounded-md px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*=size-])]:size-3',
+        'sm': 'h-7 gap-1 rounded-md px-3 text-[0.8rem] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*=size-])]:size-3.5',
         'lg': 'h-10 gap-1.5 px-5 has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4',
-        'icon': 'size-9 rounded-full',
-        'icon-xs': 'size-6 rounded-full [&_svg:not([class*=size-])]:size-3',
-        'icon-sm': 'size-7 rounded-full',
-        'icon-lg': 'size-10 rounded-full',
+        'icon': 'size-9 rounded-md',
+        'icon-xs': 'size-6 rounded-md [&_svg:not([class*=size-])]:size-3',
+        'icon-sm': 'size-7 rounded-md',
+        'icon-lg': 'size-10 rounded-md',
       },
     },
     defaultVariants: {

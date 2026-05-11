@@ -4,7 +4,6 @@
         :options="options"
         placeholder="All companies"
         search-placeholder="Search companies..."
-        class="w-56"
         @update:model-value="onSelect"
     />
 </template>

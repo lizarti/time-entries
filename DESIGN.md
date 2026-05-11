@@ -68,7 +68,7 @@ components:
     textColor: "#FFFFFF"
     fontSize: 0.875rem
     fontWeight: 600
-    rounded: "{rounded.full}"
+    rounded: "{rounded.md}"
     padding: "8px 16px"
   button-primary-hover:
     backgroundColor: "{colors.primary-hover}"
@@ -79,7 +79,7 @@ components:
     borderWidth: 1px
     fontSize: 0.875rem
     fontWeight: 500
-    rounded: "{rounded.full}"
+    rounded: "{rounded.md}"
     padding: "8px 16px"
   tag:
     fontSize: 0.75rem
@@ -152,7 +152,7 @@ Two button variants exist:
 - **Primary** (orange, pill-shaped): for the single most important action per view. One per toolbar maximum.
 - **Secondary** (white, bordered, pill-shaped): for supporting actions like "Export All Data". Never competes visually with primary.
 
-Both share the same pill border-radius (`rounded.full`) to maintain visual consistency. Icon-only action buttons (edit, delete at row level) use no border — icon-only with a hover state.
+Both share the same `rounded-md` border-radius to maintain visual consistency. Icon-only action buttons (edit, delete at row level) use no border — icon-only with a hover state.
 
 ### Tags / Badges
 

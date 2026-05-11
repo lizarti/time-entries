@@ -1,13 +1,5 @@
 <template>
-    <div class="flex flex-col gap-4 pt-4">
-
-        <!-- Error -->
-        <div
-            v-if="error"
-            class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
-        >
-            {{ error }}
-        </div>
+    <div class="flex flex-col gap-5">
 
         <!-- Summary -->
         <HistorySummary
@@ -18,152 +10,170 @@
             :loading="loading"
         />
 
-        <!-- Filter bar -->
-        <HistoryFilterBar
-            :model-value="filterState"
-            :company-id="selectedCompany?.id ?? null"
-            @update:model-value="setFilters"
-        />
+        <hr v-if="loading || (meta?.total ?? 0) > 0" class="border-border" />
 
-        <!-- Table -->
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead
-                        v-for="col in columns"
-                        :key="col.key"
-                        :class="[
-                            col.sortable && 'cursor-pointer select-none hover:text-foreground',
-                            col.key === 'hours' && 'text-right',
-                        ]"
-                        @click="col.sortable ? onSortClick(col.key) : undefined"
-                    >
-                        <div :class="['flex items-center gap-1', col.key === 'hours' && 'justify-end']">
-                            {{ col.label }}
-                            <template v-if="col.sortable">
-                                <ArrowUpIcon
-                                    v-if="params.sort_by === col.key && params.sort_dir === 'asc'"
-                                    class="h-3.5 w-3.5"
-                                />
-                                <ArrowDownIcon
-                                    v-else-if="params.sort_by === col.key"
-                                    class="h-3.5 w-3.5"
-                                />
-                                <ChevronsUpDownIcon
-                                    v-else
-                                    class="h-3.5 w-3.5 opacity-30"
-                                />
-                            </template>
-                        </div>
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
+        <h4 class="text-2xl font-semibold">Time entries</h4>
 
-            <!-- Loading skeletons -->
-            <TableBody v-if="loading">
-                <TableRow v-for="n in params.per_page" :key="n">
-                    <TableCell v-for="col in columns" :key="col.key">
-                        <Skeleton class="h-4 w-24" />
-                    </TableCell>
-                </TableRow>
-            </TableBody>
+        <!-- Table card -->
+        <div class="rounded-lg border bg-card">
+            <div class="flex flex-col gap-5 p-6">
 
-            <!-- Empty state -->
-            <TableBody v-else-if="entries.length === 0">
-                <TableRow>
-                    <TableCell :colspan="columns.length" class="py-12 text-center text-muted-foreground">
-                        No time entries found.
-                    </TableCell>
-                </TableRow>
-            </TableBody>
+                <!-- Error -->
+                <div
+                    v-if="error"
+                    class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                >
+                    {{ error }}
+                </div>
 
-            <!-- Data -->
-            <TableBody v-else>
-                <template v-for="entry in entries" :key="entry.id">
+                <!-- Filter bar -->
+                <HistoryFilterBar
+                    :model-value="filterState"
+                    :company-id="selectedCompany?.id ?? null"
+                    @update:model-value="setFilters"
+                />
 
-                    <!-- Edit mode -->
-                    <HistoryEntryRow
-                        v-if="editingId === entry.id"
-                        :entry="entry"
-                        :errors="rowErrors"
-                        :saving="savingId === entry.id"
-                        @save="(payload) => onSave(entry, payload)"
-                        @cancel="onCancel"
-                    />
-
-                    <!-- Read mode -->
-                    <TableRow v-else>
-                        <TableCell>{{ entry.company.name }}</TableCell>
-                        <TableCell>{{ entry.date }}</TableCell>
-                        <TableCell>{{ entry.employee.name }}</TableCell>
-                        <TableCell>{{ entry.project.name }}</TableCell>
-                        <TableCell>{{ entry.task.name }}</TableCell>
-                        <TableCell class="text-right tabular-nums">{{ entry.hours }}</TableCell>
-                        <TableCell class="text-right">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                :disabled="editingId !== null"
-                                @click="onEdit(entry.id)"
+                <!-- Table -->
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead
+                                v-for="col in columns"
+                                :key="col.key"
+                                :class="[
+                                    col.sortable && 'cursor-pointer select-none hover:text-foreground',
+                                    col.key === 'hours' && 'text-right',
+                                ]"
+                                @click="col.sortable ? onSortClick(col.key) : undefined"
                             >
-                                <PencilIcon class="h-4 w-4" />
-                            </Button>
-                        </TableCell>
-                    </TableRow>
+                                <div :class="['flex items-center gap-1', col.key === 'hours' && 'justify-end']">
+                                    {{ col.label }}
+                                    <template v-if="col.sortable">
+                                        <ArrowUpIcon
+                                            v-if="params.sort_by === col.key && params.sort_dir === 'asc'"
+                                            class="h-3.5 w-3.5"
+                                        />
+                                        <ArrowDownIcon
+                                            v-else-if="params.sort_by === col.key"
+                                            class="h-3.5 w-3.5"
+                                        />
+                                        <ChevronsUpDownIcon
+                                            v-else
+                                            class="h-3.5 w-3.5 opacity-30"
+                                        />
+                                    </template>
+                                </div>
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
 
-                </template>
-            </TableBody>
-        </Table>
+                    <!-- Loading skeletons -->
+                    <TableBody v-if="loading">
+                        <TableRow v-for="n in params.per_page" :key="n">
+                            <TableCell v-for="col in columns" :key="col.key">
+                                <Skeleton class="h-4 w-24" />
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
 
-        <!-- Pagination -->
-        <div
-            v-if="meta && meta.total > 0"
-            class="flex items-center justify-between text-sm"
-        >
-            <!-- Entry count -->
-            <span class="text-muted-foreground">
-                Showing {{ meta.from }}–{{ meta.to }} of {{ meta.total }} entries
-            </span>
+                    <!-- Empty state -->
+                    <TableBody v-else-if="entries.length === 0">
+                        <TableRow>
+                            <TableCell :colspan="columns.length" class="py-12 text-center text-muted-foreground">
+                                No time entries found.
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
 
-            <!-- Controls -->
-            <div class="flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    :disabled="params.page === 1"
-                    @click="setPage(params.page - 1)"
+                    <!-- Data -->
+                    <TableBody v-else>
+                        <template v-for="entry in entries" :key="entry.id">
+
+                            <!-- Edit mode -->
+                            <HistoryEntryRow
+                                v-if="editingId === entry.id"
+                                :entry="entry"
+                                :errors="rowErrors"
+                                :saving="savingId === entry.id"
+                                @save="(payload) => onSave(entry, payload)"
+                                @cancel="onCancel"
+                            />
+
+                            <!-- Read mode -->
+                            <TableRow v-else>
+                                <TableCell>{{ entry.company.name }}</TableCell>
+                                <TableCell>{{ entry.date }}</TableCell>
+                                <TableCell>{{ entry.employee.name }}</TableCell>
+                                <TableCell>{{ entry.project.name }}</TableCell>
+                                <TableCell>{{ entry.task.name }}</TableCell>
+                                <TableCell class="text-right tabular-nums">{{ entry.hours }}</TableCell>
+                                <TableCell class="text-right">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        :disabled="editingId !== null"
+                                        @click="onEdit(entry.id)"
+                                    >
+                                        <PencilIcon class="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+
+                        </template>
+                    </TableBody>
+                </Table>
+
+                <!-- Pagination -->
+                <div
+                    v-if="meta && meta.total > 0"
+                    class="flex items-center justify-between text-sm"
                 >
-                    <ChevronLeftIcon class="h-4 w-4" />
-                </Button>
+                    <!-- Entry count -->
+                    <span class="text-muted-foreground">
+                        Showing {{ meta.from }}–{{ meta.to }} of {{ meta.total }} entries
+                    </span>
 
-                <span class="text-muted-foreground">
-                    {{ meta.current_page }} / {{ meta.last_page }}
-                </span>
+                    <!-- Controls -->
+                    <div class="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            :disabled="params.page === 1"
+                            @click="setPage(params.page - 1)"
+                        >
+                            <ChevronLeftIcon class="h-4 w-4" />
+                        </Button>
 
-                <Button
-                    variant="outline"
-                    size="sm"
-                    :disabled="params.page === meta.last_page"
-                    @click="setPage(params.page + 1)"
-                >
-                    <ChevronRightIcon class="h-4 w-4" />
-                </Button>
+                        <span class="text-muted-foreground">
+                            {{ meta.current_page }} / {{ meta.last_page }}
+                        </span>
 
-                <Select
-                    :model-value="String(params.per_page)"
-                    @update:model-value="v => setPerPage(Number(v))"
-                >
-                    <SelectTrigger class="w-[80px] h-8">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="25">25</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                </Select>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            :disabled="params.page === meta.last_page"
+                            @click="setPage(params.page + 1)"
+                        >
+                            <ChevronRightIcon class="h-4 w-4" />
+                        </Button>
 
-                <span class="text-muted-foreground">per page</span>
+                        <Select
+                            :model-value="String(params.per_page)"
+                            @update:model-value="v => setPerPage(Number(v))"
+                        >
+                            <SelectTrigger class="w-[80px] h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="25">25</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                                <SelectItem value="100">100</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <span class="text-muted-foreground">per page</span>
+                    </div>
+                </div>
             </div>
         </div>
 

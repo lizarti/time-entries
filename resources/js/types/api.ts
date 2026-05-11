@@ -107,6 +107,22 @@ export interface SummaryData {
     by_company: SummaryRow[];
 }
 
+// ─── AI parsing ─────────────────────────────────────────────────────────────
+
+/** Shape returned by POST /time-entries/parse — flat object with IDs and names. */
+export interface ParsedTimeEntry {
+    company_id:    number;
+    company_name:  string;
+    employee_id:   number;
+    employee_name: string;
+    project_id:    number;
+    project_name:  string;
+    task_id:       number;
+    task_name:     string;
+    date:          string; // "YYYY-MM-DD"
+    hours:         number;
+}
+
 // ─── API envelopes ────────────────────────────────────────────────────────────
 
 /** Laravel Resource::collection() always wraps arrays in { data: T[] }. */

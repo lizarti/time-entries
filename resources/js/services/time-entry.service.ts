@@ -4,6 +4,7 @@ import type {
     ApiItem,
     ApiPage,
     BulkInsertPayload,
+    ParsedTimeEntry,
     SummaryData,
     TimeEntry,
     TimeEntryFilters,
@@ -51,5 +52,9 @@ export const timeEntryService = {
     async bulkInsert(payload: BulkInsertPayload): Promise<TimeEntry[]> {
         const res = await http.post<ApiCollection<TimeEntry>>('/time-entries/bulk', payload);
         return res.data;
+    },
+
+    async parse(message: string): Promise<ParsedTimeEntry> {
+        return http.post<ParsedTimeEntry>('/time-entries/parse', { message });
     },
 };

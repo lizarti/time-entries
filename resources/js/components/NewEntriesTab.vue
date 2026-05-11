@@ -1,5 +1,17 @@
 <template>
-    <div class="flex flex-col gap-4 pt-4">
+    <div class="flex flex-col gap-5">
+
+        <!-- AI input -->
+        <div class="rounded-lg border border-border bg-muted/40 px-4 py-4">
+            <AiEntryInput @entry-parsed="onEntryParsed" />
+        </div>
+
+        <div class="relative">
+            <div class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
+            <span class="relative mx-auto flex w-fit bg-card px-3 text-xs text-muted-foreground">
+                or add manually
+            </span>
+        </div>
 
         <!-- Error banner -->
         <div
@@ -69,6 +81,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useSelectedCompany } from '@/composables/useSelectedCompany';
 import { useTimeEntries } from '@/composables/useTimeEntries';
+import AiEntryInput from '@/components/AiEntryInput.vue';
 import NewTimeEntryRow from '@/components/NewTimeEntryRow.vue';
 import type { BulkInsertEntry } from '@/types/api';
 
@@ -217,5 +230,13 @@ function isValidationError(e: unknown): e is { status: number; body: { errors: R
 
 function onUpdateRow(index: number, updated: BulkInsertEntry): void {
     rows.value[index] = updated;
+}
+
+function onEntryParsed(entry: BulkInsertEntry): void {
+    // If a company is locked globally, honour it regardless of what the AI resolved.
+    if (selectedCompany.value) {
+        entry.company_id = selectedCompany.value.id;
+    }
+    rows.value.push(entry);
 }
 </script>
