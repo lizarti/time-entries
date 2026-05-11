@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,11 +69,11 @@ class TimeEntry extends Model
             )
             ->when(
                 ! empty($filters['date_from']),
-                fn ($q) => $q->whereDate('time_entries.date', '>=', $filters['date_from']),
+                fn ($q) => $q->whereDate('time_entries.date', '>=', Carbon::parse($filters['date_from'])->startOfDay()),
             )
             ->when(
                 ! empty($filters['date_to']),
-                fn ($q) => $q->whereDate('time_entries.date', '<=', $filters['date_to']),
+                fn ($q) => $q->whereDate('time_entries.date', '<=', Carbon::parse($filters['date_to'])->endOfDay()),
             )
             ->when(
                 ! empty($filters['search']),
